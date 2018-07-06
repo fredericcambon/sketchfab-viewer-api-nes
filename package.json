@@ -1,0 +1,31 @@
+{
+  "name": "viewer-api-emulator",
+  "version": "1.0.0",
+  "description": "Display a NES Emulator on a Sketchfab Model",
+  "main": "app.js",
+  "dependencies": {
+    "nes-emulator": "^1.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fredericcambon/sketchfab-viewer-api-nes.git"
+  },
+  "keywords": [
+    "emulator",
+    "nes",
+    "sketchfab",
+    "model",
+    "3d",
+    "viewer"
+  ],
+  "author": "Frédéric Cambon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fredericcambon/sketchfab-viewer-api-nes/issues"
+  },
+  "homepage": "https://github.com/fredericcambon/sketchfab-viewer-api-nes#readme"
+}
