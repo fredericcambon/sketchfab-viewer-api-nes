@@ -108,7 +108,7 @@ function getMaterial(api) {
  */
 function updateMaterial(api, material, textureUid) {
   return new Promise((resolve, reject) => {
-    material.channels.AlbedoPBR.texture.uid = textureUid;
+    material.channels.EmitColor.texture.uid = textureUid;
     api.setMaterial(material, resolve);
   });
 }
