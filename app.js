@@ -1,38 +1,84 @@
-var modelUid = "c8881e07da5a4f01a08b185f90a028ac";
+const MODEL = "ce08c054e06c453db0f8f99626380b49";
+const DEFAULT_ROM = 0;
+const PLAYABLE_GAMES = [
+  "super-mario-bros.nes",
+  "zelda-eur.nes",
+  "castlevania.nes"
+];
+
+var warning = document.querySelector("#warning");
 var canvas = document.querySelector("#canvas");
-var video = document.querySelector("#video");
 var viewer = document.querySelector("#viewer");
 var ctx = canvas.getContext("2d");
 var canvasImage = ctx.getImageData(0, 0, 256, 240);
 var nes = new NES.Console();
-var nesMaterial;
-var nesTextureUid;
-var listener;
+var nesMaterial, nesTextureUid, listener;
 
-document.querySelector("#romSelect").onchange = e => {
-  var reader = new FileReader();
-  var f = e.target.files[0];
+/**
+ * Iframe blocks input for the emulator, need to display
+ * a message to warn
+ */
+window.addEventListener("focus", function(event) {
+  warning.style = "display: none";
+});
 
-  // Closure to capture the file information.
-  reader.onload = (function(theFile) {
-    return function(i) {
-      nes.loadROMData(i.target.result);
-      nes.start();
+window.addEventListener("blur", function(event) {
+  if (document.activeElement === viewer) {
+    warning.style = "";
+  }
+});
+
+function getRom(i) {
+  return new Promise((resolve, reject) => {
+    var request = new XMLHttpRequest();
+
+    request.responseType = "arraybuffer";
+    request.open("GET", "http://grun7.com/roms/" + PLAYABLE_GAMES[i]);
+    request.onload = function() {
+      resolve(request.response);
     };
-  })(f);
-
-  // Read in the image file as a data URL.
-  reader.readAsArrayBuffer(f);
-};
+    request.send();
+  });
+}
 
 var client = new Sketchfab(viewer);
-client.init(modelUid, {
+client.init(MODEL, {
   success: function onSuccess(api) {
+    listener = new NesListener();
+    nes.addObserver(listener);
+
     window.viewerApi = api;
     api.start();
     api.addEventListener("viewerready", function() {
-      listener = new NesListener();
-      nes.addObserver(listener);
+      getMaterial(api)
+        .then(m => {
+          nesMaterial = m;
+          return registerTexture(api, canvas.toDataURL());
+        })
+        .then(t => {
+          nesTextureUid = t;
+          return getRom(DEFAULT_ROM);
+        })
+        .then(d => {
+          nes.loadROM(d);
+          nes.start();
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    });
+
+    /*
+     * Listens for anotation focus and switch the active rom
+     * by using the inndex of the annotation
+     */
+    api.addEventListener("annotationFocus", function(index) {
+      console.log("Reached annotation " + index);
+
+      getRom(index).then(d => {
+        nes.loadROM(d);
+        nes.start();
+      });
     });
   },
   error: function onError() {
@@ -46,17 +92,13 @@ client.init(modelUid, {
  */
 function getMaterial(api) {
   return new Promise((resolve, reject) => {
-    if (!nesMaterial) {
-      api.getMaterialList(function(err, materials) {
-        if (err) {
-          reject();
-        }
-        nesMaterial = materials[2];
-        resolve(nesMaterial);
-      });
-    } else {
+    api.getMaterialList(function(err, materials) {
+      if (err) {
+        reject();
+      }
+      nesMaterial = materials[11];
       resolve(nesMaterial);
-    }
+    });
   });
 }
 
@@ -71,30 +113,29 @@ function updateMaterial(api, material, textureUid) {
   });
 }
 
+function updateTexture(api, url, textureUid) {
+  return new Promise((resolve, reject) => {
+    api.updateTexture(url, textureUid, function(err, textureUid) {
+      if (err) {
+        reject();
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 /**
  * Registers or updates a new texture
  */
 function registerTexture(api, url) {
   return new Promise((resolve, reject) => {
-    if (!nesTextureUid) {
-      api.addTexture(url, function(err, textureUid) {
-        if (err) {
-          reject();
-        }
-        //console.log("add", textureUid);
-        nesTextureUid = textureUid;
-        resolve(textureUid);
-      });
-    } else {
-      api.updateTexture(url, nesTextureUid, function(err, textureUid) {
-        if (err) {
-          reject();
-        } else {
-          //console.log("update", textureUid);
-          resolve(textureUid);
-        }
-      });
-    }
+    api.addTexture(url, function(err, textureUid) {
+      if (err) {
+        reject();
+      }
+      resolve(textureUid);
+    });
   });
 }
 
@@ -103,16 +144,10 @@ function registerTexture(api, url) {
  * Called every frame, to get the material, its texture
  * and update it with new data
  */
-function updateTexture(api, url) {
-  var material, textureUid;
-  getMaterial(api)
-    .then(m => {
-      material = m;
-      return registerTexture(api, url);
-    })
-    .then(t => {
-      textureUid = t;
-      return updateMaterial(api, material, textureUid);
+function frame(api, url) {
+  updateTexture(api, url, nesTextureUid)
+    .then(() => {
+      return updateMaterial(api, nesMaterial, nesTextureUid);
     })
     .catch(err => {
       console.error(err);
@@ -129,11 +164,13 @@ NesListener.prototype.notify = function(t, e) {
     case "frame-ready": {
       canvasImage.data.set(e[0]);
       ctx.putImageData(canvasImage, 0, 0);
+      //scaleCtx.drawImage(canvas, 0, 0);
+
       if (window.viewerApi) {
         // Surprisingly the perfs are quite good
         // Sketchfab Viewer API does not support raw data for texture assignment
         // So we use base64 data url
-        updateTexture(window.viewerApi, canvas.toDataURL());
+        frame(window.viewerApi, canvas.toDataURL());
       }
       break;
     }

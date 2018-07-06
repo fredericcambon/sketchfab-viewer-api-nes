@@ -6,16 +6,84 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.2.1.js"></script>
-    <script type="text/javascript" src="node_modules/nes/lib/nes.js"></script>
+    <script type="text/javascript" src="node_modules/nes-emulator/lib/nes.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
   </head>
   <body>
-    <div>
-      <label for="romSelect">Change ROM</label>
-      <input type="file" class="form-control-file" id="romSelect">
+    <canvas width="256" height="240" id="canvas" style="display: none;"></canvas>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <iframe width="1024" height="786" src="" id="viewer"></iframe>
+        </div>
+        <div class="col">
+          <div class="row text-center p-3">
+            <h3>This is a POC combining the <a href="https://sketchfab.com/developers/viewer">Sketchfab Viewer API</a> with a <a href="https://github.com/fredericcambon/nes">NES Emulator</a></h3>
+            <i class="mt-1">Performance is not optimal, you will get issues.</i>
+          </div>
+          <div class="row mt-10">
+            <div class="col justify-content-center mt-3">
+              <div id="warning" class="alert alert-warning" style="display: none">
+                You cannot control the emulator if you are moving the 3D viewer.
+                Click outside of the viewer window to regain control
+              </div>
+            </div>
+          </div>
+          <div class="row justify-content-center mt-5">
+            <table className="table table-inverve mx-auto">
+              <thead>
+                <tr>
+                  <th>NES</th>
+                  <th>Keyboard</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>A</td>
+                  <td>X</td>
+                </tr>
+                <tr>
+                  <td>B</td>
+                  <td>C</td>
+                </tr>
+                <tr>
+                  <td>START</td>
+                  <td>Enter</td>
+                </tr>
+                <tr>
+                  <td>SELECT</td>
+                  <td>Shift</td>
+                </tr>
+                <tr>
+                  <td>&#8592;</td>
+                  <td>Left</td>
+                </tr>
+                <tr>
+                  <td>&#8593;</td>
+                  <td>Up</td>
+                </tr>
+                <tr>
+                  <td>&#8594;</td>
+                  <td>Right</td>
+                </tr>
+                <tr>
+                  <td>&#8595;</td>
+                  <td>Down</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
     </div>
-    <canvas width="256" height="240" id="canvas"></canvas>
-    <iframe width="1024" height="1024" src="" id="viewer"></iframe>
-    <!-- <video width="320" height="240" src="" id="video" autoplay="true"></video> -->
-    <script src="app.js"></script>
+      <footer class="footer">
+        <div class="container">
+          <div class="footer-copyright text-center py-3">
+            <a href="https://github.com/fredericcambon/sketchfab-viewer-api-nes"> Github Repo</a>
+          </div>
+        </div>
+      </footer>
+      <script src="app.js"></script>
   </body>
 </html>
