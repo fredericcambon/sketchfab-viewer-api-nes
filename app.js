@@ -96,7 +96,7 @@ function getMaterial(api) {
       if (err) {
         reject();
       }
-      nesMaterial = materials[11];
+      nesMaterial = materials.find(o => o.name === "tv-screen");
       resolve(nesMaterial);
     });
   });
